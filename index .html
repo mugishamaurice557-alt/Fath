@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Result Checker - 40% WIN / 60% LOSS</title>
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#eef2f5,#cce0ff);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:50px 10px 20px 10px;
+    min-height:100vh;
+    margin:0;
+    transition: background 0.5s ease;
+}
+.container{
+    background:#fff;
+    padding:25px;
+    width:100%;
+    max-width:450px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.15);
+    position:relative;
+    animation: slideIn 0.7s ease-out;
+}
+@keyframes slideIn{
+    0% {opacity:0; transform: translateY(-30px);}
+    100% {opacity:1; transform: translateY(0);}
+}
+h3,h4{text-align:center;}
+input,button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    font-size:16px;
+    border-radius:5px;
+    box-sizing:border-box;
+    border:1px solid #ccc;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus{
+    outline:none;
+    border-color:#007bff;
+    box-shadow:0 0 5px rgba(0,123,255,0.5);
+}
+button{
+    background:#28a745;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+}
+button:hover{
+    background:#218838;
+    transform: scale(1.05);
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+.reset-btn{
+    background:#dc3545;
+}
+.reset-btn:hover{
+    background:#c82333;
+    transform: scale(1.05);
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+.result{
+    margin-top:15px;
+    font-weight:bold;
+    text-align:center;
+    font-size:28px;
+    opacity:0;
+    transform: translateY(-10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.result.show{
+    opacity:1;
+    transform: translateY(0);
+}
+.notice{
+    margin-top:15px;
+    font-size:14px;
+    color:#333;
+    text-align:center;
+}
+ul{
+    list-style-type:none;
+    padding-left:0;
+    max-height:250px;
+    overflow-y:auto;
+}
+li{
+    background:#f4f4f4;
+    margin-bottom:5px;
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:14px;
+    transition: background 0.3s;
+}
+li:hover{background:#e2e2e2;}
+.win{color:green;font-weight:bold;}
+.loss{color:red;font-weight:bold;}
+#confetti-canvas{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:10;
+}
+@media (max-width:500px){
+    .container{padding:20px; border-radius:10px;}
+    .result{font-size:24px;}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <canvas id="confetti-canvas"></canvas>
+    <h3>Shyiramo Umubare (Integer cyangwa Decimal)</h3>
+    <input type="number" step="0.01" id="num" placeholder="Shyiramo umubare (ex: 102.14)">
+    <button onclick="check()">Reba Ibisubizo</button>
+    <button class="reset-btn" onclick="deleteHistory()">Siba Amateka (Admin)</button>
+    <div class="result" id="res"></div>
+    <div class="notice">Twandikire kuri 0792522881 uhabwe umubare</div>
+
+    <h4>Amateka y'Ibisubizo</h4>
+    <ul id="historyList"></ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script>
+// Allowed numbers only
+const allowedNumbers = [
+  102.14, 150, 507.23, 100, 500.01, 200, 303.55, 409, 850.67,
+  301.11, 600, 750.44, 120, 503.78, 400, 507, 250.99, 900, 810.12,
+  305, 204.45, 550.3, 100.5, 870, 502.88, 500, 704.77, 801, 100.01
+];
+
+let history = JSON.parse(localStorage.getItem('history')) || [];
+let usedNumbers = JSON.parse(localStorage.getItem('usedNumbers')) || [];
+
+function formatDateTime(date){
+    const h=String(date.getHours()).padStart(2,'0');
+    const m=String(date.getMinutes()).padStart(2,'0');
+    const s=String(date.getSeconds()).padStart(2,'0');
+    const d=String(date.getDate()).padStart(2,'0');
+    const mo=String(date.getMonth()+1).padStart(2,'0');
+    const y=date.getFullYear();
+    return `${h}:${m}:${s} ${d}/${mo}/${y}`;
+}
+
+function renderHistory(){
+    const historyList=document.getElementById('historyList');
+    historyList.innerHTML='';
+    history.slice().reverse().forEach(h=>{
+        const status=h.result>0?`✅ WIN ${h.result} FRW`:`❌ LOSS ${h.result} FRW`;
+        const li=document.createElement('li');
+        li.innerHTML=`${h.date} - Umubare: ${h.number}, <span class="${h.result>0?'win':'loss'}">${status}</span>`;
+        historyList.appendChild(li);
+    });
+}
+
+// Mobile-friendly confetti
+function shootConfetti(){
+    const duration = 2*1000;
+    const end = Date.now() + duration;
+    const colors = ['#ff0','#0ff','#f0f','#ff6347','#00ff7f'];
+    (function frame(){
+        confetti({
+            particleCount: 7,
+            angle: Math.random()*360,
+            spread: 60,
+            origin: {x: Math.random(), y: Math.random()*0.6},
+            colors: colors,
+            scalar: 0.8
+        });
+        if(Date.now() < end){ requestAnimationFrame(frame); }
+    }());
+}
+
+function check(){
+    const input=parseFloat(document.getElementById("num").value);
+    const res=document.getElementById("res");
+    res.classList.remove("show"); res.classList.add("hide");
+
+    setTimeout(()=>{
+        if(isNaN(input)){
+            res.style.color="red"; 
+            res.textContent="Shyiramo umubare wemewe (Integer cyangwa Decimal)";
+        } else if(!allowedNumbers.includes(input)){
+            res.style.color="red";
+            res.textContent="Uyu mubare nturi mu rutonde rwemewe";
+        } else if(usedNumbers.includes(input)){
+            res.style.color="red";
+            res.textContent="❌ ERROR: Uyu mubare wakoreshwe mbere kandi ntushobora kongera gukoreshwa!";
+        } else {
+            const probability = Math.random();
+            let result = 0;
+            if(probability <= 0.4){
+                result = Math.floor(Math.random()*5)+1;
+            }
+
+            res.innerHTML = result>0?`✅ WIN ${result} FRW`:`❌ LOSS ${result} FRW`;
+            res.style.color=result>0?"green":"red";
+
+            if(result>0){ shootConfetti(); }
+
+            const now=new Date();
+            history.push({number:input,result:result,date:formatDateTime(now)});
+            usedNumbers.push(input);
+            localStorage.setItem('history',JSON.stringify(history));
+            localStorage.setItem('usedNumbers',JSON.stringify(usedNumbers));
+            renderHistory();
+        }
+        res.classList.remove("hide"); res.classList.add("show");
+    },50);
+}
+
+function deleteHistory(){
+    const adminCode=prompt("Shyiramo kode yemewe kugira ngo usibe amateka:");
+    if(adminCode==="20201"){
+        history=[];
+        usedNumbers=[];
+        localStorage.removeItem('history');
+        localStorage.removeItem('usedNumbers');
+        document.getElementById('res').textContent="Amateka yasibwe!";
+        renderHistory();
+    } else alert("Kode siyo, ntushobora gusiba amateka!");
+}
+
+renderHistory();
+</script>
+</body>
+</html>
